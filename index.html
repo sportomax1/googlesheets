@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Sheets CRUD Interface!</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .config-section {
+            padding: 20px 30px;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .config-group {
+            margin-bottom: 15px;
+        }
+
+        .config-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #495057;
+        }
+
+        .config-group select {
+            width: 100%;
+            max-width: 400px;
+            padding: 10px;
+            border: 2px solid #dee2e6;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .config-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .btn-warning:hover {
+            background: #e0a800;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .action-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+            padding: 10px 15px;
+            border: 2px solid #dee2e6;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        thead {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        th {
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+        }
+
+        tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        .actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            color: #495057;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #495057;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #dee2e6;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .status {
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status.active {
+            display: block;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Google Sheets CRUD Interface</h1>
+            <p>View, Create, Update, and Delete data from Google Sheets</p>
+        </div>
+
+        <div class="config-section">
+            <div class="config-group">
+                <label for="sheetSelect">Select Sheet Tab:</label>
+                <select id="sheetSelect" onchange="loadData()">
+                    <option value="">Loading sheets...</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="content">
+            <div id="status" class="status"></div>
+
+            <div class="action-bar">
+                <input type="text" id="searchBox" class="search-box" placeholder="Search data..." onkeyup="filterTable()">
+                <button class="btn btn-success" onclick="openAddModal()">+ Add New Row</button>
+            </div>
+
+            <div id="loadingDiv" class="loading" style="display: none;">
+                <div class="spinner"></div>
+                <p>Loading data...</p>
+            </div>
+
+            <div class="table-container">
+                <table id="dataTable">
+                    <thead id="tableHead"></thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Modal -->
+    <div id="dataModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header" id="modalTitle">Add New Row</div>
+            <div id="modalForm"></div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="saveData()">Save</button>
+                <button class="btn" onclick="closeModal()" style="background: #6c757d; color: white;">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // These will be injected by your build process from GitHub Secrets
+        const CONFIG = {
+            apiKey: 'AIzaSyDxyWtoKmbh6hUUANnjxK0VqvZHI5JDncg',
+            spreadsheetId: '1bmQFvpZyVMvGkUA-M8rTlw1xsYxE1orX3_et9n_Dul0'
+        };
+
+        let currentData = [];
+        let headers = [];
+        let editingRowIndex = -1;
+        let availableSheets = [];
+        let currentSheet = '';
+
+        // Initialize on page load
+        window.onload = async () => {
+            await loadAvailableSheets();
+        };
+
+        function showStatus(message, type) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = `status ${type} active`;
+            setTimeout(() => {
+                status.classList.remove('active');
+            }, 3000);
+        }
+
+        async function loadAvailableSheets() {
+            try {
+                const url = `https://sheets.googleapis.com/v4/spreadsheets/${CONFIG.spreadsheetId}?key=${CONFIG.apiKey}`;
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error('Failed to fetch spreadsheet metadata. Check your API key and Spreadsheet ID.');
+                }
+
+                const data = await response.json();
+                availableSheets = data.sheets.map(sheet => sheet.properties.title);
+                
+                const select = document.getElementById('sheetSelect');
+                select.innerHTML = availableSheets.map(sheet => 
+                    `<option value="${sheet}">${sheet}</option>`
+                ).join('');
+
+                if (availableSheets.length > 0) {
+                    currentSheet = availableSheets[0];
+                    await loadData();
+                }
+            } catch (error) {
+                showStatus(error.message, 'error');
+                document.getElementById('sheetSelect').innerHTML = '<option value="">Error loading sheets</option>';
+            }
+        }
+
+        async function loadData() {
+            currentSheet = document.getElementById('sheetSelect').value;
+            
+            if (!currentSheet) {
+                return;
+            }
+
+            document.getElementById('loadingDiv').style.display = 'block';
+            document.getElementById('dataTable').style.display = 'none';
+
+            try {
+                const url = `https://sheets.googleapis.com/v4/spreadsheets/${CONFIG.spreadsheetId}/values/${currentSheet}?key=${CONFIG.apiKey}`;
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error('Failed to fetch data from sheet');
+                }
+
+                const data = await response.json();
+                
+                if (!data.values || data.values.length === 0) {
+                    throw new Error('No data found in the sheet');
+                }
+
+                currentData = data.values;
+                headers = currentData[0];
+                renderTable();
+                showStatus('Data loaded successfully!', 'success');
+            } catch (error) {
+                showStatus(error.message, 'error');
+            } finally {
+                document.getElementById('loadingDiv').style.display = 'none';
+                document.getElementById('dataTable').style.display = 'table';
+            }
+        }
+
+        function renderTable() {
+            const thead = document.getElementById('tableHead');
+            const tbody = document.getElementById('tableBody');
+
+            thead.innerHTML = `
+                <tr>
+                    ${headers.map(h => `<th>${h}</th>`).join('')}
+                    <th>Actions</th>
+                </tr>
+            `;
+
+            tbody.innerHTML = currentData.slice(1).map((row, index) => `
+                <tr>
+                    ${row.map(cell => `<td>${cell || ''}</td>`).join('')}
+                    <td class="actions">
+                        <button class="btn btn-warning btn-sm" onclick="openEditModal(${index})">Edit</button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteRow(${index})">Delete</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function openAddModal() {
+            editingRowIndex = -1;
+            document.getElementById('modalTitle').textContent = 'Add New Row';
+            const form = document.getElementById('modalForm');
+            
+            form.innerHTML = headers.map(header => `
+                <div class="form-group">
+                    <label>${header}</label>
+                    <input type="text" id="field_${header}" class="form-field">
+                </div>
+            `).join('');
+
+            document.getElementById('dataModal').classList.add('active');
+        }
+
+        function openEditModal(rowIndex) {
+            editingRowIndex = rowIndex;
+            document.getElementById('modalTitle').textContent = 'Edit Row';
+            const form = document.getElementById('modalForm');
+            const rowData = currentData[rowIndex + 1];
+
+            form.innerHTML = headers.map((header, i) => `
+                <div class="form-group">
+                    <label>${header}</label>
+                    <input type="text" id="field_${header}" class="form-field" value="${rowData[i] || ''}">
+                </div>
+            `).join('');
+
+            document.getElementById('dataModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('dataModal').classList.remove('active');
+        }
+
+        async function saveData() {
+            const newRow = headers.map(header => 
+                document.getElementById(`field_${header}`).value
+            );
+
+            if (editingRowIndex === -1) {
+                currentData.push(newRow);
+                showStatus('Row added successfully!', 'success');
+            } else {
+                currentData[editingRowIndex + 1] = newRow;
+                showStatus('Row updated successfully!', 'success');
+            }
+
+            await updateSheet();
+            renderTable();
+            closeModal();
+        }
+
+        async function deleteRow(rowIndex) {
+            if (!confirm('Are you sure you want to delete this row?')) {
+                return;
+            }
+
+            currentData.splice(rowIndex + 1, 1);
+            await updateSheet();
+            renderTable();
+            showStatus('Row deleted successfully!', 'success');
+        }
+
+        async function updateSheet() {
+            try {
+                const url = `https://sheets.googleapis.com/v4/spreadsheets/${CONFIG.spreadsheetId}/values/${currentSheet}?valueInputOption=RAW&key=${CONFIG.apiKey}`;
+                
+                const response = await fetch(url, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        values: currentData
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to update sheet');
+                }
+            } catch (error) {
+                showStatus('Error updating sheet: ' + error.message, 'error');
+            }
+        }
+
+        function filterTable() {
+            const searchTerm = document.getElementById('searchBox').value.toLowerCase();
+            const tbody = document.getElementById('tableBody');
+            const rows = tbody.getElementsByTagName('tr');
+
+            for (let row of rows) {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchTerm) ? '' : 'none';
+            }
+        }
+    </script>
+</body>
+</html>
